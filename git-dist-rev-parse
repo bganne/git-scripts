@@ -1,0 +1,13 @@
+#!/usr/bin/awk -f
+/^Submodule/{
+	sm=$2
+}
+{
+	lines[sm]=lines[sm] "    " $0 "\n"
+}
+END{
+	printf "Updated submodules:"
+	for (sm in lines) printf " %s", sm
+	printf "\n"
+	for (sm in lines) printf "\n%s", lines[sm]
+}

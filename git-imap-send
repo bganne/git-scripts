@@ -1,0 +1,80 @@
+#!/bin/bash
+
+die() {
+	echo "$*"
+	exit 1
+} >&2
+
+usage() {
+	die "Usage: $0 <imap|imaps> <host> <login> [-f folder] [-p port] [-s sleep] <files...>"
+}
+
+PROTOCOL=$1
+HOST=$2
+LOGIN=$3
+shift 3
+
+while getopts "f:p:s:" opt; do
+	case $opt in
+		f)
+			FOLDER="$OPTARG"
+			;;
+		p)
+			PORT="$OPTARG"
+			;;
+		s)
+			SLEEP="$OPTARG"
+			;;
+		*)
+			usage
+			;;
+	esac
+done
+shift $((OPTIND-1))
+
+[ -z "$HOST" ] && usage
+[ -z "$LOGIN" ] && usage
+[ -z "$FOLDER" ] && FOLDER=Drafts
+[ -z "$SLEEP" ] && SLEEP="0.5"
+[ -r "$1" ] || usage
+
+case "$PROTOCOL" in
+	imap)
+		[ -z "$PORT" ] && PORT=143
+		CONNECT="telnet $HOST $PORT"
+		;;
+	imaps)
+		[ -z "$PORT" ] && PORT=993
+		CONNECT="openssl s_client -connect $HOST:$PORT"
+		;;
+	debug)
+		CONNECT="cat > debug.log"
+		;;
+	*)
+		usage
+		;;
+esac
+
+IMAP_INDEX=0
+imap_cmd() {
+	echo "a$((IMAP_INDEX++)) $*"
+	sleep_cmd
+}
+
+sleep_cmd() {
+	sleep "$SLEEP"
+}
+
+read -s -p "Password: " PASS
+{
+	sleep_cmd
+	imap_cmd "login \"$LOGIN\" \"$PASS\""
+	imap_cmd "select inbox"
+	for f in "$@"; do
+		[ -r "$f" ] || { echo "Cannot read $f. Skipped." >&2 ; continue ; }
+		imap_cmd "append \"$FOLDER\" {$(stat -c '%s' "$f")}"
+		cat "$f"
+		echo
+		sleep_cmd
+	done
+} | eval "$CONNECT"

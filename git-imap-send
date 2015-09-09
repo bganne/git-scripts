@@ -45,7 +45,7 @@ case "$PROTOCOL" in
 		;;
 	imaps)
 		[ -z "$PORT" ] && PORT=993
-		CONNECT="openssl s_client -connect $HOST:$PORT"
+		CONNECT="openssl s_client -quiet -connect $HOST:$PORT"
 		;;
 	debug)
 		CONNECT="cat > debug.log"
@@ -66,6 +66,7 @@ sleep_cmd() {
 }
 
 read -s -p "Password: " PASS
+echo
 {
 	sleep_cmd
 	imap_cmd "login \"$LOGIN\" \"$PASS\""
@@ -77,4 +78,5 @@ read -s -p "Password: " PASS
 		echo
 		sleep_cmd
 	done
+	imap_cmd "logout"
 } | eval "$CONNECT"

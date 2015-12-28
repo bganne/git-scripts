@@ -11,3 +11,5 @@ Some random scripts I use to ease my day-to-day life with git:
 	`git imap-send` which is broken on my Debian testing for some
 	unknown reason (it keeps trying doing webdav stuff...)
 -	`git-smtp-send`: send patches over smtp(s).
+
+I also add my gitconfig and gitignore base files.

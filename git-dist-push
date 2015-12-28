@@ -2,6 +2,6 @@
 while read sm sha1; do
 	echo "$sm: git push $1 +$sha1:$2..."
 	(cd "$sm" && git push "$1" "+$sha1:$2") || exit
-done < <(git show|awk -F'[/[:blank:]]' '/diff --git/{sm=$4}/^[+]Subproject/{print sm, $3}')
+done < <(git show|awk '/diff --git/{sm=substr($3,3)}/^[+]Subproject/{print sm, $3}')
 echo "git push $1 +HEAD:$2..."
 git push "$1" "+HEAD:$2"
